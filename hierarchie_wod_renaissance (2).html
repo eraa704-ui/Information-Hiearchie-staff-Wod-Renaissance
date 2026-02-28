@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hiérarchie Staff — WoD Renaissance</title>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #020912;
+    --ocean-deep: #041525;
+    --ocean-mid: #062040;
+    --white: #e8f4f8;
+    --grey: #5a7a8a;
+
+    /* Couleurs par pôle */
+    --gold: #c8a84b;
+    --gold2: #f0d080;
+
+    --mod: #2a6dd9;
+    --mod2: #5a9df9;
+
+    --mj: #8b3a8b;
+    --mj2: #c06ac0;
+
+    --anim: #d97b20;
+    --anim2: #f0aa50;
+
+    --dev: #1a9a6a;
+    --dev2: #40c890;
+
+    --cm: #c83a3a;
+    --cm2: #f06060;
+
+    --staff: #3a5a7a;
+    --staff2: #6a9aba;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Crimson Text', serif;
+    overflow-x: hidden;
+  }
+
+  /* OCEAN ANIMATED BG */
+  #ocean-canvas {
+    position:fixed; inset:0;
+    pointer-events:none; z-index:0;
+  }
+
+  /* SCANLINES */
+  body::after {
+    content:''; position:fixed; inset:0;
+    background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,20,40,0.08) 3px,rgba(0,20,40,0.08) 4px);
+    pointer-events:none; z-index:9999;
+  }
+
+  /* HEADER */
+  header {
+    position:relative; z-index:2;
+    text-align:center; padding:4rem 2rem 3rem;
+    border-bottom:1px solid rgba(200,168,75,0.15);
+    background:linear-gradient(180deg, rgba(4,21,37,0.9) 0%, transparent 100%);
+  }
+
+  .header-jolly {
+    font-size:3rem; margin-bottom:0.5rem;
+    filter:drop-shadow(0 0 20px rgba(200,168,75,0.4));
+    opacity:0; animation:fadeUp 1s 0.2s forwards;
+  }
+
+  .header-label {
+    font-family:'Cinzel',serif; font-size:0.55rem;
+    letter-spacing:7px; color:var(--gold); text-transform:uppercase;
+    opacity:0; animation:fadeUp 0.8s 0.4s forwards;
+    margin-bottom:0.8rem;
+  }
+
+  .header-title {
+    font-family:'Pirata One',cursive;
+    font-size:clamp(2.5rem,7vw,6rem);
+    color:var(--white);
+    text-shadow:0 0 40px rgba(200,168,75,0.3), 2px 4px 8px rgba(0,0,0,0.8);
+    opacity:0; animation:fadeUp 1s 0.6s forwards;
+    line-height:1;
+  }
+
+  .header-title span { color:var(--gold2); }
+
+  .header-sub {
+    font-family:'Cinzel',serif; font-size:0.6rem;
+    letter-spacing:5px; color:rgba(255,255,255,0.25);
+    text-transform:uppercase; margin-top:1rem;
+    opacity:0; animation:fadeIn 1s 1.2s forwards;
+  }
+
+  .by-manatsu {
+    margin-top:1.5rem;
+    opacity:0; animation:fadeIn 1s 1.5s forwards;
+  }
+  .by-manatsu .by { font-family:'Cinzel',serif; font-size:0.7rem; letter-spacing:6px; color:rgba(200,168,75,0.5); text-transform:uppercase; display:block; margin-bottom:0.2rem; }
+  .by-manatsu .name { font-family:'Pirata One',cursive; font-size:clamp(2rem,5vw,4rem); color:var(--gold2); text-shadow:0 0 30px rgba(200,168,75,0.5), 0 0 60px rgba(200,168,75,0.2); letter-spacing:4px; }
+
+  .header-divider {
+    display:flex; align-items:center; justify-content:center;
+    gap:1rem; margin:1.5rem auto 0; max-width:400px;
+    opacity:0; animation:fadeIn 1s 1s forwards;
+  }
+  .header-divider::before, .header-divider::after {
+    content:''; flex:1; height:1px;
+    background:linear-gradient(90deg,transparent,rgba(200,168,75,0.4),transparent);
+  }
+  .header-divider span { color:var(--gold); font-size:1rem; }
+
+  /* CONTAINER */
+  .container { max-width:1100px; margin:0 auto; padding:3rem 2rem; position:relative; z-index:2; }
+
+  /* GÉRANT STAFF — TOP */
+  .gerant-staff-block {
+    text-align:center; margin-bottom:4rem;
+    opacity:0; transform:translateY(20px);
+    transition:opacity 0.9s, transform 0.9s;
+  }
+  .gerant-staff-block.visible { opacity:1; transform:translateY(0); }
+
+  .gs-card {
+    display:inline-block; padding:2rem 3rem;
+    background:linear-gradient(135deg, rgba(200,168,75,0.15), rgba(200,168,75,0.05));
+    border:1px solid rgba(200,168,75,0.5);
+    position:relative; max-width:600px; width:100%;
+    box-shadow:0 0 40px rgba(200,168,75,0.08), inset 0 0 30px rgba(200,168,75,0.03);
+  }
+  .gs-card::before, .gs-card::after {
+    content:'⚓'; position:absolute;
+    color:rgba(200,168,75,0.2); font-size:1.5rem;
+  }
+  .gs-card::before { top:0.8rem; left:1rem; }
+  .gs-card::after { bottom:0.8rem; right:1rem; }
+
+  .gs-rank { font-family:'Cinzel',serif; font-size:0.5rem; letter-spacing:5px; color:var(--gold); text-transform:uppercase; margin-bottom:0.4rem; display:block; }
+  .gs-title { font-family:'Pirata One',cursive; font-size:2.2rem; color:var(--gold2); text-shadow:0 0 20px rgba(200,168,75,0.4); margin-bottom:1rem; }
+  .gs-desc { font-size:1rem; line-height:1.85; color:rgba(232,244,248,0.7); font-style:italic; }
+
+  /* ARROW DOWN */
+  .arrow-down {
+    text-align:center; margin:1rem 0;
+    color:rgba(200,168,75,0.3); font-size:1.5rem;
+    position:relative; z-index:2;
+  }
+
+  /* SECTION POLE */
+  .pole-section {
+    margin-bottom:3.5rem;
+    opacity:0; transform:translateY(20px);
+    transition:opacity 0.8s, transform 0.8s;
+  }
+  .pole-section.visible { opacity:1; transform:translateY(0); }
+
+  .pole-header {
+    display:flex; align-items:center; gap:1.5rem;
+    margin-bottom:2rem; padding-bottom:1rem;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+  }
+  .pole-icon { font-size:2rem; }
+  .pole-label-small { font-family:'Cinzel',serif; font-size:0.5rem; letter-spacing:4px; color:rgba(255,255,255,0.3); text-transform:uppercase; display:block; margin-bottom:0.2rem; }
+  .pole-name { font-family:'Pirata One',cursive; font-size:1.8rem; }
+  .pole-desc-short { font-size:0.9rem; color:var(--grey); font-style:italic; margin-top:0.2rem; }
+
+  /* CARDS */
+  .cards-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:1.5rem; }
+
+  .role-card {
+    background:rgba(4,21,37,0.85);
+    border:1px solid rgba(255,255,255,0.06);
+    padding:1.8rem;
+    position:relative; overflow:hidden;
+    transition:border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    opacity:0; transform:translateY(15px);
+    transition:opacity 0.6s, transform 0.6s, border-color 0.3s, box-shadow 0.3s;
+  }
+  .role-card.visible { opacity:1; transform:translateY(0); }
+  .role-card:hover { transform:translateY(-5px) !important; }
+
+  /* top accent */
+  .role-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+
+  /* Corner decoration */
+  .role-card::after {
+    content:''; position:absolute;
+    bottom:0; right:0;
+    width:40px; height:40px;
+    border-bottom:1px solid; border-right:1px solid;
+    opacity:0.15;
+  }
+
+  .card-rank { font-family:'Cinzel',serif; font-size:0.48rem; letter-spacing:4px; color:rgba(255,255,255,0.25); text-transform:uppercase; margin-bottom:0.4rem; display:block; }
+  .card-title { font-family:'Pirata One',cursive; font-size:1.4rem; margin-bottom:1rem; }
+  .card-sep { width:25px; height:2px; margin-bottom:1rem; }
+  .card-desc { font-size:0.97rem; line-height:1.85; color:rgba(200,220,230,0.65);  }
+  .card-desc strong { font-style:italic; font-weight:normal; }
+
+  /* PERMS */
+  .card-perms { display:flex; flex-wrap:wrap; gap:0.4rem; }
+  .perm-tag {
+    padding:0.2rem 0.65rem;
+    font-family:'Cinzel',serif; font-size:0.45rem;
+    letter-spacing:2px; text-transform:uppercase; border:1px solid;
+  }
+
+  /* POLE COLORS */
+  /* Gérant Staff */
+  .c-gold .role-card::before { background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+  .c-gold .role-card::after { border-color:var(--gold); }
+  .c-gold .role-card:hover { border-color:rgba(200,168,75,0.3); box-shadow:0 8px 30px rgba(200,168,75,0.08); }
+  .c-gold .card-title { color:var(--gold2); }
+  .c-gold .card-sep { background:var(--gold); }
+  .c-gold .perm-tag { border-color:rgba(200,168,75,0.3); color:var(--gold); background:rgba(200,168,75,0.07); }
+  .c-gold .pole-name { color:var(--gold2); text-shadow:0 0 15px rgba(200,168,75,0.3); }
+
+  /* Modération */
+  .c-mod .role-card::before { background:linear-gradient(90deg,transparent,var(--mod),transparent); }
+  .c-mod .role-card::after { border-color:var(--mod); }
+  .c-mod .role-card:hover { border-color:rgba(42,109,217,0.3); box-shadow:0 8px 30px rgba(42,109,217,0.1); }
+  .c-mod .card-title { color:var(--mod2); }
+  .c-mod .card-sep { background:var(--mod); }
+  .c-mod .perm-tag { border-color:rgba(42,109,217,0.3); color:var(--mod2); background:rgba(42,109,217,0.07); }
+  .c-mod .pole-name { color:var(--mod2); text-shadow:0 0 15px rgba(42,109,217,0.3); }
+
+  /* MJ */
+  .c-mj .role-card::before { background:linear-gradient(90deg,transparent,var(--mj),transparent); }
+  .c-mj .role-card::after { border-color:var(--mj); }
+  .c-mj .role-card:hover { border-color:rgba(139,58,139,0.3); box-shadow:0 8px 30px rgba(139,58,139,0.1); }
+  .c-mj .card-title { color:var(--mj2); }
+  .c-mj .card-sep { background:var(--mj); }
+  .c-mj .perm-tag { border-color:rgba(139,58,139,0.3); color:var(--mj2); background:rgba(139,58,139,0.07); }
+  .c-mj .pole-name { color:var(--mj2); text-shadow:0 0 15px rgba(139,58,139,0.3); }
+
+  /* Animation */
+  .c-anim .role-card::before { background:linear-gradient(90deg,transparent,var(--anim),transparent); }
+  .c-anim .role-card::after { border-color:var(--anim); }
+  .c-anim .role-card:hover { border-color:rgba(217,123,32,0.3); box-shadow:0 8px 30px rgba(217,123,32,0.1); }
+  .c-anim .card-title { color:var(--anim2); }
+  .c-anim .card-sep { background:var(--anim); }
+  .c-anim .perm-tag { border-color:rgba(217,123,32,0.3); color:var(--anim2); background:rgba(217,123,32,0.07); }
+  .c-anim .pole-name { color:var(--anim2); text-shadow:0 0 15px rgba(217,123,32,0.3); }
+
+  /* Dev */
+  .c-dev .role-card::before { background:linear-gradient(90deg,transparent,var(--dev),transparent); }
+  .c-dev .role-card::after { border-color:var(--dev); }
+  .c-dev .role-card:hover { border-color:rgba(26,154,106,0.3); box-shadow:0 8px 30px rgba(26,154,106,0.1); }
+  .c-dev .card-title { color:var(--dev2); }
+  .c-dev .card-sep { background:var(--dev); }
+  .c-dev .perm-tag { border-color:rgba(26,154,106,0.3); color:var(--dev2); background:rgba(26,154,106,0.07); }
+  .c-dev .pole-name { color:var(--dev2); text-shadow:0 0 15px rgba(26,154,106,0.3); }
+
+  /* CM */
+  .c-cm .role-card::before { background:linear-gradient(90deg,transparent,var(--cm),transparent); }
+  .c-cm .role-card::after { border-color:var(--cm); }
+  .c-cm .role-card:hover { border-color:rgba(200,58,58,0.3); box-shadow:0 8px 30px rgba(200,58,58,0.1); }
+  .c-cm .card-title { color:var(--cm2); }
+  .c-cm .card-sep { background:var(--cm); }
+  .c-cm .perm-tag { border-color:rgba(200,58,58,0.3); color:var(--cm2); background:rgba(200,58,58,0.07); }
+  .c-cm .pole-name { color:var(--cm2); text-shadow:0 0 15px rgba(200,58,58,0.3); }
+
+  /* Staff */
+  .c-staff .role-card::before { background:linear-gradient(90deg,transparent,var(--staff),transparent); }
+  .c-staff .role-card::after { border-color:var(--staff); }
+  .c-staff .role-card:hover { border-color:rgba(58,90,122,0.3); box-shadow:0 8px 30px rgba(58,90,122,0.1); }
+  .c-staff .card-title { color:var(--staff2); }
+  .c-staff .card-sep { background:var(--staff); }
+  .c-staff .perm-tag { border-color:rgba(58,90,122,0.3); color:var(--staff2); background:rgba(58,90,122,0.07); }
+  .c-staff .pole-name { color:var(--staff2); text-shadow:0 0 15px rgba(58,90,122,0.3); }
+
+  /* SEPARATOR */
+  .sep { max-width:1100px; margin:0 auto 2rem; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent); position:relative; z-index:2; }
+
+  /* PYRAMIDE */
+  .pyramide-section {
+    position:relative; z-index:2;
+    max-width:800px; margin:3rem auto;
+    padding:3rem 2rem; text-align:center;
+  }
+  .pyr-title { font-family:'Pirata One',cursive; font-size:2rem; color:var(--gold2); margin-bottom:0.5rem; }
+  .pyr-sub { font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:4px; color:rgba(255,255,255,0.2); text-transform:uppercase; margin-bottom:2.5rem; }
+
+  .pyr { display:flex; flex-direction:column; gap:0.5rem; align-items:center; }
+  .pyr-row { display:flex; gap:0.6rem; justify-content:center; flex-wrap:wrap; }
+  .pyr-item {
+    padding:0.5rem 1.2rem;
+    font-family:'Cinzel',serif; font-size:0.52rem; letter-spacing:2px;
+    text-transform:uppercase; border:1px solid;
+    opacity:0; transform:scaleX(0.85);
+    transition:opacity 0.5s, transform 0.5s;
+  }
+  .pyr-item.visible { opacity:1; transform:scaleX(1); }
+  .pyr-arrow { color:rgba(255,255,255,0.1); font-size:1rem; margin:0.1rem 0; }
+
+  .pyr-item.gold { border-color:rgba(200,168,75,0.4); color:var(--gold2); background:rgba(200,168,75,0.08); }
+  .pyr-item.mod { border-color:rgba(42,109,217,0.3); color:var(--mod2); background:rgba(42,109,217,0.06); }
+  .pyr-item.mj { border-color:rgba(139,58,139,0.3); color:var(--mj2); background:rgba(139,58,139,0.06); }
+  .pyr-item.anim { border-color:rgba(217,123,32,0.3); color:var(--anim2); background:rgba(217,123,32,0.06); }
+  .pyr-item.dev { border-color:rgba(26,154,106,0.3); color:var(--dev2); background:rgba(26,154,106,0.06); }
+  .pyr-item.cm { border-color:rgba(200,58,58,0.3); color:var(--cm2); background:rgba(200,58,58,0.06); }
+  .pyr-item.staff { border-color:rgba(58,90,122,0.3); color:var(--staff2); background:rgba(58,90,122,0.06); }
+
+  /* FOOTER */
+  footer {
+    position:relative; z-index:2; text-align:center;
+    padding:2.5rem 2rem; border-top:1px solid rgba(255,255,255,0.04);
+  }
+  .footer-logo { font-family:'Pirata One',cursive; font-size:1.5rem; color:rgba(200,168,75,0.3); }
+  .footer-sub { font-family:'Cinzel',serif; font-size:0.5rem; letter-spacing:4px; color:rgba(255,255,255,0.08); text-transform:uppercase; margin-top:0.4rem; }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  @media(max-width:700px){ .cards-row{grid-template-columns:1fr;} .gs-card{padding:1.5rem;} }
+</style>
+</head>
+<body>
+
+<canvas id="ocean-canvas"></canvas>
+
+<!-- HEADER -->
+<header>
+  <div class="header-jolly">☠</div>
+  <p class="header-label">Serveur RP · One Piece Universe</p>
+  <h1 class="header-title">WoD <span>Renaissance</span></h1>
+  <div class="header-divider"><span>⚓</span></div>
+  <p class="header-sub">Structure Officielle du Staff · Rôles · Missions · Organisation</p>
+  <div class="by-manatsu">
+    <span class="by">by</span>
+    <span class="name">Manatsu</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ══════ GÉRANT STAFF ══════ -->
+  <div class="gerant-staff-block">
+    <div class="gs-card">
+      <span class="gs-rank">⚓ Sommet Absolu · Autorité Suprême</span>
+      <div class="gs-title">Gérant Staff</div>
+      <p class="gs-desc">Supervise tous les pôles. Recrute les gérants. A le dernier mot sur toutes les décisions du serveur.</p>
+    </div>
+  </div>
+
+  <div class="arrow-down">▼</div>
+  <div class="sep"></div>
+
+  <!-- ══════ PÔLE MODÉRATION ══════ -->
+  <div class="pole-section c-mod">
+    <div class="pole-header">
+      <div class="pole-icon">🛡️</div>
+      <div>
+        <span class="pole-label-small">Pôle</span>
+        <div class="pole-name">Modération</div>
+        <p class="pole-desc-short">Ordre, discipline et gestion des conflits — sous autorité directe du Gérant Staff.</p>
+      </div>
+    </div>
+    <div class="cards-row">
+
+      <div class="role-card">
+        <span class="card-rank">Rang I · Porte d'entrée du Staff</span>
+        <h3 class="card-title">Staff</h3>
+        <div class="card-sep"></div>
+        <p class="card-desc">Premier rôle dans le staff. Aide les modérateurs sur les tâches simples. <strong>Évolue vers Modérateur</strong> après avoir fait ses preuves.</p>
+      </div>
+
+      <div class="role-card">
+        <span class="card-rank">Rang II · Pilier de l'Ordre</span>
+        <h3 class="card-title">Modérateur</h3>
+        <div class="card-sep"></div>
+        <p class="card-desc">Gère les <strong>tickets Discord</strong>, les plaintes, les conflits entre joueurs. Applique les sanctions — warns, mutes, bans. Répond directement au <strong>Gérant Staff</strong>.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- ══════ PÔLE MJ ══════ -->
+  <div class="pole-section c-mj">
+    <div class="pole-header">
+      <div class="pole-icon">📜</div>
+      <div>
+        <span class="pole-label-small">Pôle</span>
+        <div class="pole-name">Maîtres du Jeu</div>
+        <p class="pole-desc-short">Trames narratives, lore, cohérence RP — les architectes de l'univers.</p>
+      </div>
+    </div>
+    <div class="cards-row">
+
+      <div class="role-card">
+        <span class="card-rank">MJ · Rang I</span>
+        <h3 class="card-title">Maître du Jeu</h3>
+        <div class="card-sep"></div>
+        <p class="card-desc">Crée et gère les <strong>trames RP</strong> — quêtes, events, arcs. Vérifie la <strong>cohérence RP</strong> des joueurs. Travaille avec le Gérant RP.</p>
+      </div>
+
+      <div class="role-card">
+        <span class="card-rank">MJ · Rang II · Chef du Pôle</span>
+        <h3 class="card-title">Gérant RP</h3>
+        <div class="card-sep"></div>
+        <p class="card-desc">Supervise les MJ. Définit le <strong>lore officiel</strong>. Valide les backstories. Recrute dans son pôle. Dernier mot sur tout ce qui est RP.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- ══════ PÔLE ANIMATION ══════ -->
+  <div class="pole-section c-anim">
+    <div class="pole-header">
+      <div class="pole-icon">🎭</div>
+      <div>
+        <span class="pole-label-small">Pôle</span>
+        <div class="pole-name">Animation</div>
+        <p class="pole-desc-short">Events, aventures, batailles épiques — ils font vivre les Grand Line.</p>
+      </div>
+    </div>
+    <div class="cards-row">
+
+      <div class="role-card">
+        <span class="card-rank">Animation · Rang I</span>
+        <h3 class="card-title">Animateur</h3>
+        <div class="card-sep"></div>
+        <p class="card-desc">Crée et anime les <strong>events RP</strong> — batailles, explorations, tournois. Coordonne avec le Gérant Animateur et les MJ.</p>
+      </div>
+
+      <div class="role-card">
+        <span class="card-rank">Animation · Rang II · Chef du Pôle</span>
+        <h3 class="card-title">Gérant Animateur</h3>
+        <div class="card-sep"></div>
+        <p class="card-desc">Supervise les animateurs. Gère le <strong>calendrier des events</strong>. Fait le lien avec le pôle MJ. Recrute dans son pôle.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- ══════ PÔLE DEV ══════ -->
+  <div class="pole-section c-dev">
+    <div class="pole-header">
+      <div class="pole-icon">⚙️</div>
+      <div>
+        <span class="pole-label-small">Pôle</span>
+        <div class="pole-name">Développement</div>
+        <p class="pole-desc-short">Les ingénieurs du serveur — ils construisent les outils qui font tourner WoD Renaissance.</p>
+      </div>
+    </div>
+    <div class="cards-row">
+
+      <div class="role-card">
+        <span class="card-rank">Dev · Rang I</span>
+        <h3 class="card-title">Développeur</h3>
+        <div class="card-sep"></div>
+        <p class="card-desc">Développe et maintient le <strong>jeu Roblox</strong>. Crée les systèmes, mécaniques et mises à jour du jeu.</p>
+      </div>
+
+      <div class="role-card">
+        <span class="card-rank">Dev · Rang II · Chef du Pôle</span>
+        <h3 class="card-title">Gérant Dev</h3>
+        <div class="card-sep"></div>
+        <p class="card-desc">Supervise les devs. Décide des <strong>priorités sur le jeu Roblox</strong>. Valide ce qui est mis en ligne. Gère les bugs et pannes.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- ══════ COMMUNITY MANAGER ══════ -->
+  <div class="pole-section c-cm">
+    <div class="pole-header">
+      <div class="pole-icon">📣</div>
+      <div>
+        <span class="pole-label-small">Pôle</span>
+        <div class="pole-name">Community Management</div>
+        <p class="pole-desc-short">Réseaux, communication, croissance — la voix de WoD Renaissance vers le monde.</p>
+      </div>
+    </div>
+    <div class="cards-row" style="grid-template-columns:1fr;">
+
+      <div class="role-card" style="max-width:680px;">
+        <span class="card-rank">CM · Pôle Solo</span>
+        <h3 class="card-title">Community Manager</h3>
+        <div class="card-sep"></div>
+        <p class="card-desc">Gère les <strong>réseaux sociaux</strong> du serveur. Poste du contenu, fait du recrutement et gère les partenariats.</p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- PYRAMIDE -->
+<div class="pyramide-section">
+  <h2 class="pyr-title">⚓ Vue d'Ensemble</h2>
+  <p class="pyr-sub">Ordre hiérarchique complet · WoD Renaissance</p>
+  <div class="pyr">
+
+    <div class="pyr-row"><div class="pyr-item gold">☠ Gérant Staff</div></div>
+    <div class="pyr-arrow">▼</div>
+    <div class="pyr-row">
+      <div class="pyr-item mod">🛡 Modérateur</div>
+      <div class="pyr-item mj">📜 Gérant RP</div>
+      <div class="pyr-item anim">🎭 Gérant Animateur</div>
+      <div class="pyr-item dev">⚙ Gérant Dev</div>
+      <div class="pyr-item cm">📣 Community Manager</div>
+    </div>
+    <div class="pyr-arrow">▼</div>
+    <div class="pyr-row">
+      <div class="pyr-item mj">📜 Maître du Jeu</div>
+      <div class="pyr-item anim">🎭 Animateur</div>
+      <div class="pyr-item dev">⚙ Développeur</div>
+    </div>
+    <div class="pyr-arrow">▼</div>
+    <div class="pyr-row"><div class="pyr-item staff">⚑ Staff</div></div>
+
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">☠ WoD Renaissance</div>
+  <p class="footer-sub">Structure officielle · Serveur RP One Piece</p>
+</footer>
+
+<script>
+const canvas = document.getElementById('ocean-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, t = 0;
+function resize(){ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+// ═══ BUBBLES ═══
+class Bubble {
+  constructor(){ this.reset(true); }
+  reset(init){
+    this.x = Math.random()*W;
+    this.y = init ? Math.random()*H : H + 20;
+    this.r = Math.random()*8 + 2;
+    this.speedY = -(Math.random()*0.6 + 0.2);
+    this.speedX = Math.random()*0.3 - 0.15;
+    this.wobble = Math.random()*Math.PI*2;
+    this.wobbleSpeed = Math.random()*0.03 + 0.01;
+    this.opacity = Math.random()*0.25 + 0.05;
+    this.life = 1;
+    this.decay = Math.random()*0.0008 + 0.0002;
+  }
+  update(){
+    this.wobble += this.wobbleSpeed;
+    this.x += this.speedX + Math.sin(this.wobble)*0.4;
+    this.y += this.speedY;
+    this.life -= this.decay;
+    if(this.y < -20 || this.life <= 0) this.reset(false);
+  }
+  draw(){
+    const a = this.opacity * this.life;
+    // Bubble outline
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(100,200,255,${a*0.8})`;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+    // Inner shine
+    ctx.beginPath();
+    ctx.arc(this.x - this.r*0.3, this.y - this.r*0.3, this.r*0.35, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(200,240,255,${a*0.4})`;
+    ctx.fill();
+    // Subtle fill
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(20,80,140,${a*0.08})`;
+    ctx.fill();
+  }
+}
+
+// ═══ SMALL SPARKLE PARTICLES ═══
+class Sparkle {
+  constructor(){ this.reset(true); }
+  reset(init){
+    this.x = Math.random()*W;
+    this.y = init ? Math.random()*H : H + 5;
+    this.size = Math.random()*1.5 + 0.3;
+    this.speedY = -(Math.random()*0.3 + 0.05);
+    this.speedX = Math.random()*0.2 - 0.1;
+    this.opacity = Math.random()*0.3 + 0.05;
+    this.life = 1;
+    this.decay = Math.random()*0.0015 + 0.0003;
+    this.hue = Math.random()*50 + 185;
+  }
+  update(){
+    this.x += this.speedX + Math.sin(this.y*0.01)*0.1;
+    this.y += this.speedY;
+    this.life -= this.decay;
+    if(this.y < -5 || this.life <= 0) this.reset(false);
+  }
+  draw(){
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+    ctx.fillStyle = `hsla(${this.hue},80%,75%,${this.opacity*this.life})`;
+    ctx.fill();
+  }
+}
+
+// ═══ WAVES ═══
+class Wave {
+  constructor(cfg){ Object.assign(this, cfg); this.offset = Math.random()*Math.PI*2; }
+  draw(t){
+    ctx.beginPath();
+    const yBase = this.yFactor * H;
+    ctx.moveTo(0, yBase);
+    for(let x=0; x<=W; x+=4){
+      const y = yBase
+        + Math.sin(x * this.freq1 + t * this.speed1 + this.offset) * this.amp1
+        + Math.sin(x * this.freq2 + t * this.speed2 + this.offset*1.3) * this.amp2
+        + Math.sin(x * this.freq3 + t * this.speed3) * this.amp3;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    // Foam line on top
+    ctx.beginPath();
+    ctx.moveTo(0, yBase);
+    for(let x=0; x<=W; x+=4){
+      const y = yBase
+        + Math.sin(x * this.freq1 + t * this.speed1 + this.offset) * this.amp1
+        + Math.sin(x * this.freq2 + t * this.speed2 + this.offset*1.3) * this.amp2
+        + Math.sin(x * this.freq3 + t * this.speed3) * this.amp3;
+      ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = this.foam;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+  }
+}
+
+const waves = [
+  new Wave({ yFactor:0.92, freq1:0.008, freq2:0.015, freq3:0.005, amp1:12, amp2:6, amp3:18, speed1:0.6, speed2:0.9, speed3:0.3, color:'rgba(4,30,60,0.55)', foam:'rgba(100,180,255,0.07)' }),
+  new Wave({ yFactor:0.95, freq1:0.012, freq2:0.02,  freq3:0.007, amp1:10, amp2:5, amp3:14, speed1:0.8, speed2:0.7, speed3:0.4, color:'rgba(2,18,40,0.6)',  foam:'rgba(120,200,255,0.08)' }),
+  new Wave({ yFactor:0.98, freq1:0.01,  freq2:0.018, freq3:0.006, amp1:8,  amp2:4, amp3:10, speed1:0.5, speed2:1.1, speed3:0.35,color:'rgba(1,10,25,0.7)',  foam:'rgba(150,220,255,0.1)' }),
+];
+
+// ═══ CAUSTICS (light patterns on seafloor) ═══
+function drawCaustics(t){
+  for(let i=0; i<6; i++){
+    const x = (W * (i/6 + 0.08)) + Math.sin(t*0.4 + i*1.2)*60;
+    const y = H * 0.7 + Math.sin(t*0.3 + i*0.8)*30;
+    const r = 40 + Math.sin(t*0.5 + i)*25;
+    const grd = ctx.createRadialGradient(x,y,0,x,y,r);
+    grd.addColorStop(0, `rgba(0,120,200,${0.04+Math.sin(t*0.6+i)*0.02})`);
+    grd.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle = grd; ctx.fill();
+  }
+}
+
+// ═══ DEEP OCEAN GRADIENT ═══
+function drawOcean(){
+  const grd = ctx.createLinearGradient(0,0,0,H);
+  grd.addColorStop(0,   '#020912');
+  grd.addColorStop(0.4, '#041828');
+  grd.addColorStop(0.75,'#031020');
+  grd.addColorStop(1,   '#020810');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0,0,W,H);
+}
+
+const bubbles  = Array.from({length:60},  () => new Bubble());
+const sparkles = Array.from({length:120}, () => new Sparkle());
+
+function animate(){
+  t += 0.012;
+  ctx.clearRect(0,0,W,H);
+  drawOcean();
+  drawCaustics(t);
+  sparkles.forEach(p => { p.update(); p.draw(); });
+  bubbles.forEach(b => { b.update(); b.draw(); });
+  waves.forEach(w => w.draw(t));
+  requestAnimationFrame(animate);
+}
+animate();
+
+// SCROLL REVEAL
+const revealEls = document.querySelectorAll('.pole-section, .gerant-staff-block, .role-card, .pyr-item');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting) setTimeout(() => e.target.classList.add('visible'), 60);
+  });
+}, { threshold: 0.05 });
+revealEls.forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
